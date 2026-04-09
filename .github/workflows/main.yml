@@ -18,6 +18,7 @@ jobs:
     with:
       environment: dev
       aws_region: ${{ matrix.region }}
+    secrets: inherit
 
   #  QA (wait for ALL dev jobs)
   deploy-qa:
@@ -31,3 +32,4 @@ jobs:
     with:
       environment: qa
       aws_region: ${{ matrix.region }}
+    secrets: inherit
