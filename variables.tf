@@ -43,6 +43,11 @@ variable "db_inbound_rules" {
   }))
 }
 
+variable "public_key" {
+  description = "SSH public key"
+  type        = string
+}
+
 variable "web_alb_name" {
   description = "Provide the name for web-tier application load balancer"
   type = string
