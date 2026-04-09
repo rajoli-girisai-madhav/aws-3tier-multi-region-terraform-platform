@@ -23,6 +23,7 @@ jobs:
       TF_VAR_aws_region: ${{ inputs.aws_region }}
       TF_VAR_environment: ${{ inputs.environment }}
       TF_VAR_project: myapp
+      TF_VAR_public_key: ${{ secrets.TF_VAR_PUBLIC_KEY }}
 
     steps:
 
