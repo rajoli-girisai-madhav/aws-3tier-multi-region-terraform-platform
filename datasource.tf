@@ -1,137 +1,97 @@
-name: Reusable Terraform CI/CD Pipeline
+# Declare the data source for Availability Zones
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+# Get latest AMI ID for Amazon Linux2 OS
+data "aws_ami" "amzlinux" {
+  most_recent = true
+  owners = [ "amazon" ]
+  filter {
+    name = "name"
+    values = [ "amzn2-ami-hvm-*-gp2" ]
+  }
+  filter {
+    name = "root-device-type"
+    values = [ "ebs" ]
+  }
+  filter {
+    name = "virtualization-type"
+    values = [ "hvm" ]
+  }
+  filter {
+    name = "architecture"
+    values = [ "x86_64" ]
+  }
+}
+# Get latest AMI ID for Ubuntu OS
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+  owners = ["099720109477"] # Canonical
+}
 
-on:
-  workflow_call:
-    inputs:
-      environment:
-        required: true
-        type: string
-      aws_region:
-        required: true
-        type: string
+# Get instances created by ASG
+data "aws_autoscaling_group" "web_asg" {
+  name       = module.Web-Tier.asg_name
+  depends_on  = [module.Web-Tier]
+}
 
-jobs:
+# Fetch instance IDs from ASG
+data "aws_instances" "web_asg_instances" {
+  depends_on = [data.aws_autoscaling_group.web_asg]
 
-  terraform-ci:
-    name: Terraform CI
-    runs-on: ubuntu-latest
+  filter {
+    name   = "tag:aws:autoscaling:groupName"
+    values = [module.Web-Tier.asg_name]
+  }
 
-    env:
-      AWS_REGION: ${{ inputs.aws_region }}
-      TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
-      TF_BACKEND_REGION: ap-south-1
-      TF_VAR_aws_region: ${{ inputs.aws_region }}
-      TF_VAR_environment: ${{ inputs.environment }}
-      TF_VAR_project: myapp
-      TF_VAR_public_key: ${{ secrets.TF_VAR_PUBLIC_KEY }}
-      
+  filter {
+    name   = "instance-state-name"
+    values = ["running"]
+  }
+}
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+# Fetch EC2 instance details
+data "aws_instance" "web_instances" {
+  for_each    = toset(data.aws_instances.web_asg_instances.ids)
+  instance_id = each.value
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.6
+  depends_on = [data.aws_instances.web_asg_instances]
+}
+}
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+# Get instances created by ASG
+data "aws_autoscaling_group" "app_asg" {
+  name       = module.App-Tier.asg_name
+  depends_on  = [module.App-Tier]
+}
 
-      - name: Terraform Init
-        run: |
-          terraform init \
-            -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" \
-            -backend-config="key=${{ inputs.environment }}/${{ env.AWS_REGION }}/terraform.tfstate" \
-            -backend-config="region=${{ env.TF_BACKEND_REGION }}"
+# Fetch instance IDs from ASG
+data "aws_instances" "app_asg_instances" {
+  depends_on = [data.aws_autoscaling_group.app_asg]
 
-      - name: Select/Create Workspace
-        run: |
-          terraform workspace select ${{ inputs.environment }} || \
-          terraform workspace new ${{ inputs.environment }}
+  filter {
+    name   = "tag:aws:autoscaling:groupName"
+    values = [module.App-Tier.asg_name]
+  }
 
-      - name: Terraform Validate
-        run: terraform validate
+  filter {
+    name   = "instance-state-name"
+    values = ["running"]
+  }
+}
 
-      - name: Terraform Plan
-        run: |
-          terraform plan \
-            -input=false \
-            -var-file="${{ inputs.environment }}.tfvars" \
-            -var="aws_region=${{ env.AWS_REGION }}" \
-            -out=tfplan-${{ env.AWS_REGION }}
+# Fetch EC2 instance details
+data "aws_instance" "app_instances" {
+  for_each    = toset(data.aws_instances.app_asg_instances.ids)
+  instance_id = each.value
 
-      - name: Upload Plan Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan-${{ inputs.environment }}-${{ env.AWS_REGION }}
-          path: tfplan-${{ env.AWS_REGION }}
-
-
-  terraform-cd:
-    name: Terraform CD
-    runs-on: ubuntu-latest
-    needs: terraform-ci
-
-    environment: ${{ inputs.environment }}
-
-    env:
-      AWS_REGION: ${{ inputs.aws_region }}
-      TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
-      TF_BACKEND_REGION: ap-south-1
-      TF_VAR_aws_region: ${{ inputs.aws_region }}
-      TF_VAR_environment: ${{ inputs.environment }}
-      TF_VAR_project: myapp
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.6
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Terraform Init
-        run: |
-          terraform init \
-            -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" \
-            -backend-config="key=${{ inputs.environment }}/${{ env.AWS_REGION }}/terraform.tfstate" \
-            -backend-config="region=${{ env.TF_BACKEND_REGION }}"
-
-      - name: Select/Create Workspace
-        run: |
-          terraform workspace select ${{ inputs.environment }} || \
-          terraform workspace new ${{ inputs.environment }}
-
-      - name: Download Plan Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan-${{ inputs.environment }}-${{ env.AWS_REGION }}
-          path: .
-
-      - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan-${{ env.AWS_REGION }}
-
-      - name: Wait for stabilization
-        run: sleep 120   # 2 mins
-
-      - name: Extract Terraform Outputs
-        run: terraform output -json | tee outputs.json
-
-      - name: Upload Output Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfoutput-${{ inputs.environment }}-${{ env.AWS_REGION }}
-          path: outputs.json
+  depends_on = [data.aws_instances.app_asg_instances]
+}
