@@ -1,9 +1,9 @@
 name: Terraform Multi-Env Multi-Region Pipeline
 
-# on:
-#   push:
- #    branches:
-   #   - main
+on:
+  push:
+    branches:
+      - main
 
 jobs:
 
@@ -17,19 +17,5 @@ jobs:
     uses: ./.github/workflows/terraform-reusable-pipeline.yml
     with:
       environment: dev
-      aws_region: ${{ matrix.region }}
-    secrets: inherit
-
-  #  QA (wait for ALL dev jobs)
-  deploy-qa:
-    name: Deploy QA
-    needs: deploy-dev
-    strategy:
-      matrix:
-        region: [us-east-1, ap-southeast-1]
-
-    uses: ./.github/workflows/terraform-reusable-pipeline.yml
-    with:
-      environment: qa
       aws_region: ${{ matrix.region }}
     secrets: inherit
