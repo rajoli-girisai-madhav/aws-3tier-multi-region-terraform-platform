@@ -3,11 +3,6 @@ variable "aws_region" {
   type = string
 }
 
-variable "aws_profile_name" {
-  description = "To provide the profile name of the IAM userof my aws account"
-  type = string
-}
-
 variable "vpc_cidr_block" {
   description = "IPv4 CIDR block is for creating VPC for my 3-Tier Architecture Project"
   type        = string

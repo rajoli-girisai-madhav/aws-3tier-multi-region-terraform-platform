@@ -1,5 +1,4 @@
 aws_region = "ap-south-1"
-aws_profile_name = "default"
 vpc_cidr_block = "109.0.0.0/16"
 public_subnet_cidr = ["109.0.10.0/24", "109.0.30.0/24"]
 app_tier_subnet_cidr = ["109.0.50.0/24", "109.0.70.0/24"]
