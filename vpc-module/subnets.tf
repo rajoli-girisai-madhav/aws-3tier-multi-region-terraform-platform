@@ -1,7 +1,7 @@
 # Public Subnets for Web-Tier
 
 resource "aws_subnet" "public-subnets" {
-  count = 2
+  count = length(var.public_subnet_cidr)
   vpc_id     = aws_vpc.main.id
   cidr_block = var.public_subnet_cidr[count.index]
   availability_zone = data.aws_availability_zones.available.names[count.index]
@@ -14,7 +14,7 @@ resource "aws_subnet" "public-subnets" {
 # Private Subnets for App-Tier
 
 resource "aws_subnet" "app-tier-subnets" {
-  count = 2
+  count = length(var.app_tier_subnet_cidr)
   vpc_id     = aws_vpc.main.id
   cidr_block = var.app_tier_subnet_cidr[count.index]
   availability_zone = data.aws_availability_zones.available.names[count.index]
@@ -27,7 +27,7 @@ resource "aws_subnet" "app-tier-subnets" {
 # Private Subnets for DataBase-Tier
 
 resource "aws_subnet" "db-tier-subnets" {
-  count = 2
+  count = length(var.db_tier_subnet_cidr)
   vpc_id     = aws_vpc.main.id
   cidr_block = var.db_tier_subnet_cidr[count.index]
   availability_zone = data.aws_availability_zones.available.names[count.index]
