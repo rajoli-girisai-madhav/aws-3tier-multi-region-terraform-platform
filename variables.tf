@@ -63,10 +63,7 @@ variable "web_instance_type" {
   description = "Instance type for launched instances"
   type = string
 }
-variable "public_key" {
-  description = "SSH public key"
-  type        = string
-}
+
 variable "web_name" {
   description = "provide a name for my AutoScaling Group"
   type = string
