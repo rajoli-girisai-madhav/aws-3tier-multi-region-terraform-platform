@@ -65,7 +65,6 @@ data "aws_instance" "web_instances" {
 
   depends_on = [data.aws_instances.web_asg_instances]
 }
-}
 
 # Get instances created by ASG
 data "aws_autoscaling_group" "app_asg" {
