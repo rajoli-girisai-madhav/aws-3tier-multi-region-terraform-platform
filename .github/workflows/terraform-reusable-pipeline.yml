@@ -51,7 +51,11 @@ jobs:
         run: terraform validate
 
       - name: Terraform Plan
-        run: terraform plan -var="aws_region=${{ env.AWS_REGION }}" -out=tfplan-${{ env.AWS_REGION }}
+        run: terraform plan \
+               -input=false \
+               -var-file="${{ inputs.environment }}.tfvars" \
+               -var="aws_region=${{ env.AWS_REGION }}" \
+               -out=tfplan-${{ env.AWS_REGION }}
 
       - name: Upload Plan Artifact
         uses: actions/upload-artifact@v4
