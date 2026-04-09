@@ -51,6 +51,11 @@ data "aws_instances" "web_asg_instances" {
     name   = "tag:aws:autoscaling:groupName"
     values = [module.Web-Tier.asg_name]
   }
+
+  filter {
+    name   = "instance-state-name"
+    values = ["running"]
+  }
 }
 
 # Fetch EC2 instance details
@@ -75,6 +80,11 @@ data "aws_instances" "app_asg_instances" {
   filter {
     name   = "tag:aws:autoscaling:groupName"
     values = [module.App-Tier.asg_name]
+  }
+
+  filter {
+    name   = "instance-state-name"
+    values = ["running"]
   }
 }
 
