@@ -37,6 +37,11 @@ module "dbsg" {
   }
 }
 
+resource "aws_key_pair" "deployer" {
+  key_name   = "terraform-project-key"
+  public_key = var.public_key
+}
+
 # Creating Web-Tier
 module "Web-Tier" {
   source = ".//ASG-module"
@@ -48,6 +53,7 @@ module "Web-Tier" {
   ami-id = data.aws_ami.amzlinux.id
   instance_type = var.web_instance_type
   sg-id = [module.websg.security_group_id]
+  key_name = aws_key_pair.deployer.key_name
   user_data = base64encode(file("amzninstall.sh"))
   name = var.web_name
   min_size = var.web_min_size
@@ -68,6 +74,7 @@ module "App-Tier" {
   ami-id = data.aws_ami.ubuntu.id
   instance_type = var.app_instance_type
   sg-id = [module.appsg.security_group_id]
+  key_name = aws_key_pair.deployer.key_name
   user_data = ""
   name = var.app_name
   min_size = var.app_min_size
@@ -81,17 +88,17 @@ module "App-Tier" {
 # DB Subnet Group
 # You MUST add both subnets here so RDS generally knows where it is allowed to exist.
 resource "aws_db_subnet_group" "project_db_subnet" {
-  name       = "my-db-subnet-group"
+  name       = "${local.name_prefix}-db-subnet-group"
   subnet_ids = module.project_vpc.db_tier_subnet_ids
   tags = {
-    Name = "My DB Subnet Group"
+    Name = "${local.name_prefix}-db-subnet-group"
   }
 }
 
 # Writer Instance (Pinned to Subnet 1 via AZ)
 
 resource "aws_db_instance" "writer_instance" {
-  identifier = "mysql-writer-db"
+  identifier = "${local.name_prefix}-writer-db"
   # Engine & Storage
   engine            = "mysql"
   engine_version    = "8.0"
@@ -104,7 +111,6 @@ resource "aws_db_instance" "writer_instance" {
   db_name  = "appdb"
   # Placement Control
   db_subnet_group_name = aws_db_subnet_group.project_db_subnet.name
-  availability_zone    = "ap-south-1a" # Forces placement into 'subnet_writer'
   # Network Security
   vpc_security_group_ids = [module.dbsg.security_group_id]
   publicly_accessible    = false
@@ -112,20 +118,19 @@ resource "aws_db_instance" "writer_instance" {
   backup_retention_period = 1
   skip_final_snapshot     = true
   tags = {
-    Name = "MySQL Writer"
+    Name = "${local.name_prefix}-writer-db"
   }
 }
 
 # Read Replica (Pinned to Subnet 2 ('subnet_reader') via AZ)
 
 resource "aws_db_instance" "replica" {
-  identifier = "mysql-reader-db"
+  identifier = "${local.name_prefix}-reader-db"
   # Replication Link
   replicate_source_db = aws_db_instance.writer_instance.identifier
   # Instance Spec (Can match or differ from writer)
   instance_class = "db.t3.micro"
   storage_type   = "gp3"
-  availability_zone = "ap-south-1b"
   # Network Security
   vpc_security_group_ids = [module.dbsg.security_group_id]
   publicly_accessible    = false
@@ -133,7 +138,6 @@ resource "aws_db_instance" "replica" {
   backup_retention_period = 0
   skip_final_snapshot     = true
   tags = {
-    Name = "MySQL Read Replica"
+    Name = "${local.name_prefix}-reader-db"
   }
 }
-
