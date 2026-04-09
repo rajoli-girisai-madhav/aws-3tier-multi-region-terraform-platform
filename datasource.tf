@@ -39,38 +39,49 @@ data "aws_ami" "ubuntu" {
 
 # Get instances created by ASG
 data "aws_autoscaling_group" "web_asg" {
-  name = module.Web-Tier.asg_name
-  depends_on = [module.Web-Tier]
+  name       = module.Web-Tier.asg_name
+  depends_on  = [module.Web-Tier]
 }
 
+# Fetch instance IDs from ASG
 data "aws_instances" "web_asg_instances" {
+  depends_on = [data.aws_autoscaling_group.web_asg]
+
   filter {
-    name = "tag:aws:autoscaling:groupName"
+    name   = "tag:aws:autoscaling:groupName"
     values = [module.Web-Tier.asg_name]
   }
 }
 
 # Fetch EC2 instance details
 data "aws_instance" "web_instances" {
-  for_each = toset(data.aws_instances.web_asg_instances.ids)
+  for_each    = toset(data.aws_instances.web_asg_instances.ids)
   instance_id = each.value
+
+  depends_on = [data.aws_instances.web_asg_instances]
+}
 }
 
 # Get instances created by ASG
 data "aws_autoscaling_group" "app_asg" {
-  name = module.App-Tier.asg_name
-  depends_on = [module.App-Tier]
+  name       = module.App-Tier.asg_name
+  depends_on  = [module.App-Tier]
 }
 
+# Fetch instance IDs from ASG
 data "aws_instances" "app_asg_instances" {
+  depends_on = [data.aws_autoscaling_group.app_asg]
+
   filter {
-    name = "tag:aws:autoscaling:groupName"
+    name   = "tag:aws:autoscaling:groupName"
     values = [module.App-Tier.asg_name]
   }
 }
 
 # Fetch EC2 instance details
 data "aws_instance" "app_instances" {
-  for_each = toset(data.aws_instances.app_asg_instances.ids)
+  for_each    = toset(data.aws_instances.app_asg_instances.ids)
   instance_id = each.value
+
+  depends_on = [data.aws_instances.app_asg_instances]
 }
