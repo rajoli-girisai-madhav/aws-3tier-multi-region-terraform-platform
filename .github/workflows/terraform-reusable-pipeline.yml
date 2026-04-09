@@ -54,7 +54,7 @@ jobs:
       - name: Upload Plan Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tfplan-${{ inputs.environment }}
+          name: tfplan-${{ inputs.environment }}-${{ env.AWS_REGION }}
           path: tfplan
 
 
@@ -111,5 +111,5 @@ jobs:
       - name: Upload Output Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tfoutput-${{ inputs.environment }}}-${{ env.AWS_REGION }}
+          name: tfoutput-${{ inputs.environment }}-${{ env.AWS_REGION }}
           path: outputs.json
