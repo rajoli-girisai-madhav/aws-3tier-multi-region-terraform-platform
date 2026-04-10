@@ -1,414 +1,246 @@
-# AWS 3-Tier Architecture using Terraform
+# 🚀 AWS 3-Tier Architecture using Terraform
 
-This project provisions a **3-Tier Architecture on AWS using
-Terraform**.\
-It automates the deployment of infrastructure components such as:
+This project provisions a **production-ready 3-tier architecture on AWS using Terraform**, following Infrastructure as Code (IaC) best practices.
 
--   VPC
--   Public and Private Subnets
--   Security Groups
--   Application Load Balancers
--   Auto Scaling Groups
--   EC2 Instances
--   RDS Writer and Read Replica
--   S3 Backend for Terraform State
+It supports:
+- 🌍 **Multi-region deployment** (parallel execution)
+- 🏗️ **Multi-environment setup** (dev → qa → prod)
+- 🔄 **CI/CD automation using GitHub Actions**
+- ♻️ **Reusable workflows for creation & destruction**
+- 📦 **Reusable Terraform modules**
 
-The infrastructure supports **multiple environments** using **Terraform
-Workspaces**.
+---
 
-------------------------------------------------------------------------
+# 📑 Table of Contents
 
-# Project Structure
+- [🧱 Architecture Overview](#-architecture-overview)
+- [⚙️ Deployment Strategy](#️-deployment-strategy)
+  - [Multi-Region Deployment](#-multi-region-deployment)
+  - [Multi-Environment Deployment](#-multi-environment-deployment)
+  - [CI/CD Workflow Design](#-cicd-workflow-design)
+- [📁 Project Structure](#-project-structure)
+- [🔧 Prerequisites](#-prerequisites)
+- [🪪 Step 1: Create Key Pair](#-step-1-create-key-pair)
+- [🔐 Step 2: Configure GitHub Secrets](#-step-2-configure-github-secrets)
+- [🧾 Step 3: Create Environment Config Files](#-step-3-create-environment-config-files)
+- [🚀 Step 4: Deploy Infrastructure](#-step-4-deploy-infrastructure)
+- [🧹 Step 5: Destroy Resources](#-step-5-destroy-resources)
+- [💡 Key Highlights](#-key-highlights)
+- [🧠 Interview Explanation](#-interview-explanation)
 
-    .
-    ├── root-module
-    │   ├── terraformblock.tf
-    │   ├── provider.tf
-    │   ├── main.tf
-    │   ├── variables.tf
-    │   ├── outputs.tf
-    │   ├── datasource.tf
-    │   ├── amzninstall.sh
-    │   └── <env>.tfvars
-    │
-    ├── vpc-module
-    │   ├── vpc.tf
-    │   ├── igw.tf
-    │   ├── subnets.tf
-    │   ├── route_tables.tf
-    │   ├── subnets_association.tf
-    │   ├── eip.tf
-    │   ├── natgw.tf
-    │   ├── datasource.tf
-    │   ├── variables.tf
-    │   └── outputs.tf
-    │
-    ├── sg-module
-    │   ├── main.tf
-    │   ├── variables.tf
-    │   └── outputs.tf
-    │
-    ├── ASG-module
-    │   ├── load_balancer.tf
-    |   ├── target_group.tf
-    |   ├── launch_template.tf
-    |   ├── auto_scaling_group.tf
-    │   ├── variables.tf
-    │   └── outputs.tf
-    │
-    └── README.md
+---
 
-------------------------------------------------------------------------
+# 🧱 Architecture Overview
 
-# Deployment Workflow
+The infrastructure follows a **3-tier architecture pattern**:
 
-``` mermaid
-flowchart LR
+- **Web Tier** → Public-facing EC2 instances behind ALB  
+- **App Tier** → Private EC2 instances (business logic)  
+- **Database Tier** → RDS (primary + read replica)
 
-A[Developer] --> B[Terraform Validate]
+---
+
+# ⚙️ Deployment Strategy
+
+## 🔹 Multi-Region Deployment
+
+- Implemented using **GitHub Actions matrix strategy**
+- Each environment deploys to **different regions**
+
+| Environment | Regions |
+|------------|--------|
+| DEV        | eu-west-1, eu-west-2 |
+| QA         | us-west-1, us-west-2 |
+| PROD       | ap-south-1, ap-south-2 |
+
+---
+
+## 🔹 Multi-Environment Deployment
+
+We follow a **promotion-based deployment model**:
+
+| Environment | Deployment Type |
+|------------|----------------|
+| DEV        | Automatic |
+| QA         | Promotion from DEV |
+| PROD       | Manual Approval |
+
+---
+
+## 🔹 CI/CD Workflow Design
+
+This project uses **GitHub Actions reusable workflows**.
+
+### 🔸 Resource Creation
+- Trigger: `push`
+- Uses reusable workflow
+- Handles: init → validate → plan → apply
+- Supports:
+  - Multi-region (matrix)
+  - Multi-environment promotion
+
+### 🔸 Resource Destruction
+- Trigger: `workflow_dispatch` (manual)
+- Uses reusable workflow
+- Safely destroys infrastructure
+
+---
+
+## 🔹 CI/CD Flow
+
+```mermaid
+flowchart TD
+
+A[Code Push] --> B[Terraform Validate]
 B --> C[Terraform Plan]
-C --> D[Terraform Apply]
 
-D --> E[AWS Infrastructure Created]
+%% DEV
+C --> D[Deploy DEV]
+subgraph DEV
+  D --> D1[eu-west-1]
+  D --> D2[eu-west-2]
+end
 
-E --> F[VPC]
-E --> G[Security Groups]
-E --> H[Auto Scaling Groups]
-E --> I[Load Balancers]
-E --> J[RDS Writer]
-E --> K[RDS Read Replica]
+%% QA
+D --> E[Promote to QA]
+subgraph QA
+  E --> E1[us-west-1]
+  E --> E2[us-west-2]
+end
+
+%% PROD
+E --> F[Manual Approval]
+F --> G[Deploy PROD]
+subgraph PROD
+  G --> G1[ap-south-1]
+  G --> G2[ap-south-2]
+end
+
+%% DESTROY
+G --> H[Manual Trigger Destroy]
+H --> I[Destroy Infrastructure]
 ```
 
-------------------------------------------------------------------------
+---
 
-# Tools Used
+# 📁 Project Structure
 
--   Terraform
--   AWS
--   Git
--   AWS CLI
-
-![Terraform](https://img.shields.io/badge/Terraform-1.0+-purple)
-![AWS](https://img.shields.io/badge/AWS-Cloud-orange)
-![Infrastructure](https://img.shields.io/badge/Infrastructure-as--Code-blue)
-
-------------------------------------------------------------------------
-
-# Steps to Deploy the Infrastructure
-
-## Step 1: Export AWS Credentials
-
-``` bash
-export aws_access_key="AKIA..."
-export aws_secret_key="wJalr..."
+```
+.
+├── root-module
+│   ├── terraformblock.tf
+│   ├── provider.tf
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   ├── datasource.tf
+│   ├── locals.tf
+│   ├── amzninstall.sh
+│   ├── dev.tfvars
+│   ├── qa.tfvars
+│   └── prod.tfvars
+│
+├── vpc-module
+│   ├── vpc.tf
+│   ├── igw.tf
+│   ├── subnets.tf
+│   ├── route_tables.tf
+│   ├── subnets_association.tf
+│   ├── eip.tf
+│   ├── natgw.tf
+│   ├── datasource.tf
+│   ├── variables.tf
+│   └── outputs.tf
+│
+├── sg-module
+│   ├── main.tf
+│   ├── variables.tf
+│   └── outputs.tf
+│
+├── ASG-module
+│   ├── load_balancer.tf
+│   ├── target_group.tf
+│   ├── launch_template.tf
+│   ├── auto_scaling_group.tf
+│   ├── variables.tf
+│   └── outputs.tf
+│
+├── .github
+│   └── workflows
+│       ├── terraform-resource-creation-main-pipeline.yml
+│       ├── terraform-resource-creation-reusable-pipeline.yml
+│       ├── terraform-destroy-resources-main-pipeline.yml
+│       └── terraform-destroy-resources-reusable-pipeline.yml
+│
+└── README.md
 ```
 
-------------------------------------------------------------------------
+---
 
-## Step 2: Create Terraform Workspaces
+# 🔧 Prerequisites
 
-``` bash
-terraform workspace new Develop
-terraform workspace new Test
-terraform workspace new Pre-prod
+- AWS Account
+- IAM User with required permissions
+- GitHub Secrets configured
+- Terraform installed (optional for local runs)
+
+---
+
+# 🪪 Step 1: Create Key Pair
+
+```bash
+ssh-keygen -t rsa -b 4096 -f terraform-project-key
 ```
 
-------------------------------------------------------------------------
+---
 
-## Step 3: Create `.tfvars` Files for Each Environment with below configurations.
+# 🔐 Step 2: Configure GitHub Secrets
 
-Example:
+- AWS_ACCESS_KEY_ID  
+- AWS_SECRET_ACCESS_KEY  
+- TF_STATE_BUCKET  
+- TF_VAR_PUBLIC_KEY  
+- DB_PASSWORD_DEV  
+- DB_PASSWORD_QA  
+- DB_PASSWORD_PROD  
 
-    develop.tfvars
-    test.tfvars
-    preprod.tfvars
+---
 
-### Configuration for VPC and its components
+# 🧾 Step 3: Create `.tfvars` Files
 
-    aws_region_name = "<AWS_REGION>"
-    aws_profile_name = "<AWS_PROFILE_NAME>"
+Create:
+- dev.tfvars
+- qa.tfvars
+- prod.tfvars
 
-    vpc_cidr_block = "<CIDR_BLOCK>"
-    public_subnet_cidr = ["CIDR1", "CIDR2"]
-    app_tier_subnet_cidr = ["CIDR1", "CIDR2"]
-    db_tier_subnet_cidr = ["CIDR1", "CIDR2"]
+---
 
-### Configuring Security Groups
+# 🚀 Step 4: Deploy Infrastructure
 
-Define inbound rules for **Web, App, and Database security groups** in the `.tfvars` file.
+Push code → pipeline runs:
 
-#### Web and App Tier Security Group Rules
+1. Validate  
+2. Plan  
+3. Deploy DEV  
+4. Promote QA  
+5. Manual approval → PROD  
 
-Provide a `list(object)` defining inbound rules for both **Web Tier** and **App Tier** security groups.
+---
 
-```hcl
-web_and_app_inbound_rules = [
-  {
-    port        = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow SSH access"
-  },
-  {
-    port        = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow HTTP access"
-  }
-]
+# 🧹 Step 5: Destroy Resources
+
+Run manually:
+
+```
+terraform-destroy-resources-main-pipeline.yml
 ```
 
-Structure of the object:
+---
 
-```hcl
-list(object({
-  port        = number
-  protocol    = string
-  cidr_blocks = list(string)
-  description = string
-}))
-```
+# 💡 Key Highlights
 
-#### Database Tier Security Group Rules
-
-Provide inbound rules for the **Database Tier Security Group**.
-
-```hcl
-db_inbound_rules = [
-  {
-    port        = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow SSH access"
-  },
-  {
-    port        = 3306
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow MySQL access"
-  }
-]
-```
-
-The structure of each rule is the same as defined above.
-
-
-### Configure Web Tier and App Tier
-
-    web_alb_name = "<web_load_balancer_name>"
-    web_alb_scheme = <false>
-    web_tg_name = "<web-tier-target-group-name>"
-    web_name_prefix = "<web-launch-template-name>"
-    web_instance_type = "<instance-type>"
-    web_name = "<web-tier-autoscaling-group-name>"
-    web_min_size = <number>
-    web_max_size = <number>
-    web_desired_capacity = <number>
-    web_tags = "<web-instances-common-name>"
-
-    app_alb_name = "<app_load_balancer_name>"
-    app_alb_scheme = <false>
-    app_tg_name = "<app-tier-target-group-name>"
-    app_name_prefix = "<app-launch-template-name>"
-    app_instance_type = "<instance-type>"
-    app_name = "<app-tier-autoscaling-group-name>"
-    app_min_size = <number>
-    app_max_size = <number>
-    app_desired_capacity = <number>
-    app_tags = "<app-instances-common-name>"
-
-### Configure Database
-
-    db_password = "<YOUR_DATABASE_PASSWORD>"
-
-------------------------------------------------------------------------
-
-## step-4: Complete Example `.tfvars` Configuration
-
-Below is a complete example `.tfvars` file that can be used to deploy the infrastructure.
-
-```hcl
-################################
-# AWS Configuration
-################################
-
-aws_region_name  = "ap-south-1"
-aws_profile_name = "default"
-
-################################
-# VPC Configuration
-################################
-
-vpc_cidr_block = "132.0.0.0/16"
-
-public_subnet_cidr = [
-  "132.0.10.0/24",
-  "132.0.30.0/24"
-]
-
-app_tier_subnet_cidr = [
-  "132.0.50.0/24",
-  "132.0.70.0/24"
-]
-
-db_tier_subnet_cidr = [
-  "132.0.90.0/24",
-  "132.0.110.0/24"
-]
-
-################################
-# Security Group Rules
-################################
-
-web_and_app_inbound_rules = [
-  {
-    port        = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow SSH traffic"
-  },
-  {
-    port        = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow HTTP traffic"
-  }
-]
-
-db_inbound_rules = [
-  {
-    port        = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow SSH traffic"
-  },
-  {
-    port        = 3306
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow MySQL traffic"
-  }
-]
-
-################################
-# Web Tier Configuration
-################################
-
-web_alb_name = "Web-Tier-ALB"
-web_alb_scheme = false
-web_tg_name = "web-tier-target-group"
-
-web_name_prefix = "Web-Template"
-web_instance_type = "t3.micro"
-
-web_name = "Web-Tier-ASG"
-web_min_size = 2
-web_max_size = 4
-web_desired_capacity = 2
-
-web_tags = "Web-Instance"
-
-################################
-# App Tier Configuration
-################################
-
-app_alb_name = "App-Tier-ALB"
-app_alb_scheme = true
-app_tg_name = "app-tier-target-group"
-
-app_name_prefix = "App-Template"
-app_instance_type = "t3.micro"
-
-app_name = "App-Tier-ASG"
-app_min_size = 2
-app_max_size = 4
-app_desired_capacity = 2
-
-app_tags = "App-Tier-Instance"
-
-################################
-# Database Configuration
-################################
-
-db_password = "your-secure-password"
-```
-
-------------------------------------------------------------------------
-
-## Step 5: Validate Terraform Code
-
-``` bash
-terraform validate
-```
-
-------------------------------------------------------------------------
-
-## Step 6: Select Workspace
-
-``` bash
-terraform workspace select <env-name>
-```
-
-Example:
-
-``` bash
-terraform workspace select Develop
-```
-
-------------------------------------------------------------------------
-
-## Step 7: Create Terraform Plan
-
-``` bash
-terraform plan \
--var-file=<env-name>.tfvars \
--out=<env-name>_outfile.txt
-```
-
-Example:
-
-``` bash
-terraform plan \
--var-file=develop.tfvars \
--out=develop_outfile.txt
-```
-
-------------------------------------------------------------------------
-
-## Step 8: Deploy Infrastructure
-
-``` bash
-terraform apply "<env-name>_outfile.txt"
-```
-
-------------------------------------------------------------------------
-
-## Step 9: Refresh Terraform State
-
-``` bash
-terraform refresh "<env-name>_outfile.txt"
-```
-
-------------------------------------------------------------------------
-
-## Step 10: Save Terraform Outputs
-
-``` bash
-terraform output > <env-name>_outputs.txt
-```
-
-------------------------------------------------------------------------
-
-## Step 11: Terraform Backend State Storage
-
-    S3 Bucket
-     └── env
-          ├── Develop
-          │    └── terraform.tfstate
-          ├── Test
-          │    └── terraform.tfstate
-          └── Pre-prod
-               └── terraform.tfstate
-
-Each workspace maintains **separate state files**.
-
+- ✔ Multi-region per environment  
+- ✔ Promotion-based deployments  
+- ✔ Reusable CI/CD workflows  
+- ✔ Modular Terraform design  
+- ✔ Automated cleanup  
