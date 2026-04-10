@@ -54,24 +54,22 @@ output "App-Tier-ASG-id" {
   value = module.App-Tier.ASG_id
 }
 
-output "web_instance_ids" {
-  value = data.aws_instances.web_asg_instances.ids
+# Web Tier Outputs
+output "web_alb_dns" {
+  value = module.Web-Tier.alb_dns_name
 }
 
-output "web_instances_public_ips" {
-  value = [for instance in data.aws_instance.web_instances : instance.public_ip]
+output "web_asg_name" {
+  value = module.Web-Tier.asg_name
 }
 
-output "web_instances_private_ips" {
-  value = [for instance in data.aws_instance.web_instances : instance.private_ip]
+# App Tier Outputs
+output "app_alb_dns" {
+  value = module.App-Tier.alb_dns_name
 }
 
-output "app_instance_ids" {
-  value = data.aws_instances.app_asg_instances.ids
-}
-
-output "app_instances_private_ips" {
-  value = [for instance in data.aws_instance.app_instances : instance.private_ip]
+output "app_asg_name" {
+  value = module.App-Tier.asg_name
 }
 
 output "writer_db_dns_hostname" {
