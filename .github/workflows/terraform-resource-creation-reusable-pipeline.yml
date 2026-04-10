@@ -9,6 +9,10 @@ on:
       aws_region:
         required: true
         type: string
+    secrets:
+      DB_PASSWORD:
+      required: true
+
 
 jobs:
 
@@ -24,6 +28,7 @@ jobs:
       TF_VAR_environment: ${{ inputs.environment }}
       TF_VAR_project: myapp
       TF_VAR_public_key: ${{ secrets.TF_VAR_PUBLIC_KEY }}
+      TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
       
 
     steps:
@@ -84,6 +89,7 @@ jobs:
       TF_VAR_aws_region: ${{ inputs.aws_region }}
       TF_VAR_environment: ${{ inputs.environment }}
       TF_VAR_project: myapp
+      TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
 
     steps:
       - name: Checkout code
