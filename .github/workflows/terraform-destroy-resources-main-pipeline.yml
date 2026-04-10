@@ -15,4 +15,9 @@ jobs:
     with:
       environment: dev
       aws_region: ${{ matrix.region }}
-    secrets: inherit
+    secrets:
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD_DEV }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+      TF_VAR_PUBLIC_KEY: ${{ secrets.TF_VAR_PUBLIC_KEY }}
