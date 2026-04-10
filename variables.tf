@@ -43,11 +43,11 @@ variable "db_inbound_rules" {
   }))
 }
 
+
 variable "public_key" {
   description = "SSH public key"
   type        = string
 }
-
 variable "web_alb_name" {
   description = "Provide the name for web-tier application load balancer"
   type = string
@@ -68,7 +68,6 @@ variable "web_instance_type" {
   description = "Instance type for launched instances"
   type = string
 }
-
 variable "web_name" {
   description = "provide a name for my AutoScaling Group"
   type = string
@@ -89,7 +88,6 @@ variable "web_tags" {
   description = "provide a name prefix for web launch template"
   type = string
 }
-
 
 variable "app_alb_name" {
   description = "Provide the name for app-tier application load balancer"
@@ -137,11 +135,9 @@ variable "db_password" {
   type = string
   sensitive = true
 }
-
 variable "environment" {
   description = "Environment name (dev/qa/prod)"
 }
-
 variable "project" {
   description = "Project name"
   default     = "myapp"
