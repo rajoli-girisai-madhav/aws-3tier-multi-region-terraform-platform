@@ -50,9 +50,7 @@ jobs:
             -backend-config="region=${{ env.TF_BACKEND_REGION }}"
 
       - name: Select/Create Workspace
-        run: |
-          terraform workspace select ${{ inputs.environment }} || \
-          terraform workspace new ${{ inputs.environment }}
+        run: terraform workspace select -or-create ${{ inputs.environment }}
 
       - name: Terraform Validate
         run: terraform validate
@@ -111,9 +109,7 @@ jobs:
             -backend-config="region=${{ env.TF_BACKEND_REGION }}"
 
       - name: Select/Create Workspace
-        run: |
-          terraform workspace select ${{ inputs.environment }} || \
-          terraform workspace new ${{ inputs.environment }}
+        run: terraform workspace select -or-create ${{ inputs.environment }}
 
       - name: Download Plan Artifact
         uses: actions/download-artifact@v4
