@@ -6,7 +6,6 @@ module "project_vpc" {
   db_tier_subnet_cidr = var.db_tier_subnet_cidr
 }
 
-
 module "websg" {
   source = ".//sg-module"
   sg_name = "SG for Web tier"
@@ -42,7 +41,6 @@ resource "aws_key_pair" "deployer" {
   public_key = var.public_key
 }
 
-# Creating Web-Tier
 module "Web-Tier" {
   source = ".//ASG-module"
   alb_name = var.web_alb_name
@@ -63,7 +61,6 @@ module "Web-Tier" {
   tags = var.web_tags
 }
 
-# Creating App-Tier
 module "App-Tier" {
   source = ".//ASG-module"
   alb_name = var.app_alb_name
@@ -83,10 +80,7 @@ module "App-Tier" {
   subnet_ids = module.project_vpc.app_tier_subnet_ids
   tags = var.app_tags
 }
-
-
 # DB Subnet Group
-# You MUST add both subnets here so RDS generally knows where it is allowed to exist.
 resource "aws_db_subnet_group" "project_db_subnet" {
   name       = "${local.name_prefix}-db-subnet-group"
   subnet_ids = module.project_vpc.db_tier_subnet_ids
@@ -94,8 +88,6 @@ resource "aws_db_subnet_group" "project_db_subnet" {
     Name = "${local.name_prefix}-db-subnet-group"
   }
 }
-
-
 resource "aws_db_instance" "writer_instance" {
   identifier = "${local.name_prefix}-writer-db"
   # Engine & Storage
@@ -120,7 +112,6 @@ resource "aws_db_instance" "writer_instance" {
     Name = "${local.name_prefix}-writer-db"
   }
 }
-
 resource "aws_db_instance" "replica" {
   identifier = "${local.name_prefix}-reader-db"
   # Replication Link
