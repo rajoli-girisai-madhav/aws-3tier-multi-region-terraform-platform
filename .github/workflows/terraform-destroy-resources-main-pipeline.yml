@@ -11,7 +11,7 @@ jobs:
       matrix:
         region: [eu-west-1, eu-west-2]
 
-    uses: ./.github/workflows/reusable-terraform-destroy-pipeline.yml
+    uses: ./.github/workflows/terraform-destroy-resources-reusable-pipeline.yml
     with:
       environment: dev
       aws_region: ${{ matrix.region }}
