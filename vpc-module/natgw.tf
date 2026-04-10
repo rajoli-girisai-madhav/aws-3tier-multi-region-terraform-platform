@@ -1,7 +1,7 @@
 # Create NAT Gateways, one in each specified public subnet
 
 resource "aws_nat_gateway" "nat_gws" {
-  count         = 2 # Create two NAT gateways
+  count         = length(var.public_subnet_cidr)
   allocation_id = aws_eip.eip_for_nat[count.index].id
   subnet_id     = aws_subnet.public-subnets[count.index].id
   tags = {
