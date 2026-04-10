@@ -11,7 +11,7 @@ module "websg" {
   source = ".//sg-module"
   sg_name = "SG for Web tier"
   vpc_id = module.project_vpc.vpc_id
-  ingress_rules   = var.web_and_app_inbound_rules
+  ingress_rules = var.web_and_app_inbound_rules
   tags = {
     Name = "web server sg"
   }
@@ -21,7 +21,7 @@ module "appsg" {
   source = ".//sg-module"
   sg_name = "SG for App tier"
   vpc_id = module.project_vpc.vpc_id
-  ingress_rules   = var.web_and_app_inbound_rules
+  ingress_rules = var.web_and_app_inbound_rules
   tags = {
     Name = "app server sg"
   }
@@ -31,7 +31,7 @@ module "dbsg" {
   source = ".//sg-module"
   sg_name = "SG for db tier"
   vpc_id = module.project_vpc.vpc_id
-  ingress_rules   = var.db_inbound_rules
+  ingress_rules = var.db_inbound_rules
   tags = {
     Name = "db tier sg"
   }
@@ -95,7 +95,6 @@ resource "aws_db_subnet_group" "project_db_subnet" {
   }
 }
 
-# Writer Instance (Pinned to Subnet 1 via AZ)
 
 resource "aws_db_instance" "writer_instance" {
   identifier = "${local.name_prefix}-writer-db"
@@ -121,8 +120,6 @@ resource "aws_db_instance" "writer_instance" {
     Name = "${local.name_prefix}-writer-db"
   }
 }
-
-# Read Replica (Pinned to Subnet 2 ('subnet_reader') via AZ)
 
 resource "aws_db_instance" "replica" {
   identifier = "${local.name_prefix}-reader-db"

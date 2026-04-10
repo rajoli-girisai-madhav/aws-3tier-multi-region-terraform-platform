@@ -11,7 +11,15 @@ on:
         type: string
     secrets:
       DB_PASSWORD:
-      required: true
+        required: true
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      TF_STATE_BUCKET:
+        required: true
+      TF_VAR_PUBLIC_KEY:
+        required: true
 
 
 jobs:
@@ -46,6 +54,14 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Debug Backend Values
+        run: |
+          echo "TF_STATE_BUCKET='${{ env.TF_STATE_BUCKET }}'"
+          echo "AWS_REGION='${{ env.AWS_REGION }}'"
+          echo "TF_BACKEND_REGION='${{ env.TF_BACKEND_REGION }}'"
+          echo "ENV='${{ inputs.environment }}'"
+          echo "TF_VAR_PUBLIC_KEY: ${{ secrets.TF_VAR_PUBLIC_KEY }}"
 
       - name: Terraform Init
         run: |

@@ -11,7 +11,15 @@ on:
         type: string
     secrets:
       DB_PASSWORD:
-      required: true
+        required: true
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      TF_STATE_BUCKET:
+        required: true
+      TF_VAR_PUBLIC_KEY:
+        required: true
 
 jobs:
 

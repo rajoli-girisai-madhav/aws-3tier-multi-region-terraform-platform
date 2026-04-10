@@ -1,7 +1,7 @@
-vpc_cidr_block = "132.0.0.0/16"
-public_subnet_cidr = ["132.0.10.0/24", "132.0.30.0/24"]
-app_tier_subnet_cidr = ["132.0.50.0/24", "132.0.70.0/24"]
-db_tier_subnet_cidr = ["132.0.90.0/24", "132.0.110.0/24"]
+vpc_cidr_block = "125.0.0.0/16"
+public_subnet_cidr = ["125.0.10.0/24", "125.0.30.0/24"]
+app_tier_subnet_cidr = ["125.0.50.0/24", "125.0.70.0/24"]
+db_tier_subnet_cidr = ["125.0.90.0/24", "125.0.110.0/24"]
 web_and_app_inbound_rules = [
   {
     port        = 22
