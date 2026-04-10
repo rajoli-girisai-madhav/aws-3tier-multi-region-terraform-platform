@@ -10,24 +10,18 @@ output "Internet_gateway_id" {
 }
 
 # Output the list of public subnet IDs
-
-# The [*] (splat) operator iterates over all instances of aws_subnet.public-subnets and returns a list containing the id attribute of each.
 output "public_subnet_ids" {
   description = "captures the output of public subnet IDs created"
   value       = aws_subnet.public-subnets[*].id 
 }
 
 # Output the list of app-tier-private subnet IDs
-
-# The [*] (splat) operator iterates over all instances of aws_subnet.app-tier-subnets and returns a list containing the id attribute of each.
 output "app_tier_subnet_ids" {
   description = "captures the output of app tier subnet IDs created"
   value       = aws_subnet.app-tier-subnets[*].id
 }
 
 # Output the list of db-tier-private subnet IDs
-
-# The [*] (splat) operator iterates over all instances of aws_subnet.db-tier-subnets and returns a list containing the id attribute of each.
 output "db_tier_subnet_ids" {
   description = "captures the output of app tier subnet IDs created"
   value       = aws_subnet.db-tier-subnets[*].id

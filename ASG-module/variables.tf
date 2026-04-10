@@ -34,8 +34,8 @@ variable "sg-id" {
 variable "key_name" {
     description = "key_name for my launch template"
     type = string
-    default = "test-key" # already existing in my key_pairs
 }
+
 variable "user_data" {
     type = string
   description = "add any user data"
