@@ -9,6 +9,9 @@ on:
       aws_region:
         required: true
         type: string
+    secrets:
+      DB_PASSWORD:
+      required: true
 
 jobs:
 
