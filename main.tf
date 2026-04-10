@@ -95,7 +95,6 @@ resource "aws_db_subnet_group" "project_db_subnet" {
   }
 }
 
-# Writer Instance (Pinned to Subnet 1 via AZ)
 
 resource "aws_db_instance" "writer_instance" {
   identifier = "${local.name_prefix}-writer-db"
@@ -121,8 +120,6 @@ resource "aws_db_instance" "writer_instance" {
     Name = "${local.name_prefix}-writer-db"
   }
 }
-
-# Read Replica (Pinned to Subnet 2 ('subnet_reader') via AZ)
 
 resource "aws_db_instance" "replica" {
   identifier = "${local.name_prefix}-reader-db"
